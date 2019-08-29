@@ -41,6 +41,20 @@ class LanguagePack::Rails51 < LanguagePack::Rails5
             log "assets_precompile", :status => "success"
             puts "Asset precompilation completed (#{"%.2f" % precompile.time}s)"
 
+            sentry = rake.task("sentry:release")
+            if sentry.is_defined?
+              puts "Uploading release to sentry"
+              sentry.invoke(env: rake_env)
+
+              if sentry.success?
+                puts "Sentry release completed (#{"%.2f" % sentry.time}s)"
+              else
+                msg = "Sentry release failed.\n"
+                msg << sentry.output
+                error msg
+              end
+            end
+
             puts "Cleaning assets"
             rake.task("assets:clean").invoke(env: rake_env)
 
